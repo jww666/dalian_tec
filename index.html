@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>大连家教地图</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <h1>大连家教地图</h1>
+        <p id="summary">正在读取家教需求...</p>
+      </div>
+      <div class="keybox">
+        <input id="amapKey" type="password" placeholder="高德 Web JS API Key" autocomplete="off" />
+        <button id="saveKey" type="button">保存</button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <aside class="filters" aria-label="筛选条件">
+        <div class="filter-head">
+          <strong>筛选</strong>
+          <button id="resetFilters" type="button">重置</button>
+        </div>
+
+        <label>
+          序号
+          <input id="idQuery" type="search" placeholder="例如 12 或 T012" />
+        </label>
+
+        <label>
+          科目
+          <select id="subjectFilter"></select>
+        </label>
+
+        <label>
+          年级
+          <select id="gradeFilter"></select>
+        </label>
+
+        <label>
+          行政分区
+          <select id="districtFilter"></select>
+        </label>
+
+        <div class="salary-grid">
+          <label>
+            最低薪资
+            <input id="salaryMin" type="number" min="0" step="10" placeholder="不限" />
+          </label>
+          <label>
+            最高薪资
+            <input id="salaryMax" type="number" min="0" step="10" placeholder="不限" />
+          </label>
+        </div>
+
+        <label>
+          关键词
+          <input id="keyword" type="search" placeholder="地址、备注、科目" />
+        </label>
+      </aside>
+
+      <section class="map-area">
+        <div id="map"></div>
+        <div id="mapStatus" class="map-status"></div>
+      </section>
+
+      <section class="results">
+        <div class="results-head">
+          <strong>需求列表</strong>
+          <span id="resultCount">0 条</span>
+        </div>
+        <div id="cards" class="cards"></div>
+      </section>
+    </main>
+
+    <script src="data/tutors.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

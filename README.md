@@ -1,2 +1,60 @@
-# -
-大连市家教地图信息
+# 大连家教地图
+
+一个面向大连地区家教信息整理的静态网页。它从 Word 文档中提取家教需求的序号、地址、薪资、年级、科目、行政区和备注，并在网页中提供地图展示与筛选。
+
+## 当前结构
+
+- `index.html`：网页入口。
+- `styles.css`：页面样式。
+- `app.js`：筛选、列表、地图和高德地图加载逻辑。
+- `data/tutors.js`：网页直接读取的数据。
+- `data/tutors.json`：同一份数据，方便查看或二次处理。
+- `scripts/parse_docx.py`：从 `D:\大连家教.docx` 解析数据。
+
+## 使用方法
+
+1. 先确认 `D:\大连家教.docx` 已保存成功，并且文件不是 0 字节。
+2. 在本目录运行：
+
+```powershell
+python scripts\parse_docx.py "D:\大连家教.docx"
+```
+
+如果系统没有可用的 `python`，可以用 Codex 自带的 Python 路径运行，或让我帮你跑。
+
+3. 打开 `index.html` 查看网页。
+
+## 高德地图 Key
+
+网页可以不用 Key 先看列表和近似位置；如果要使用真实地图和地址解析，需要高德 Web 端 JavaScript API Key。不要把 Key 写进公开仓库。
+
+打开网页后，把 Key 粘到右上角的输入框并点击“保存”，页面会自动加载高德地图。
+
+## GitHub 上传
+
+你需要给我其中一种信息：
+
+- 已经建好的 GitHub 仓库地址，例如 `https://github.com/你的用户名/dalian-tutor-map.git`
+- 或者你让我教你新建仓库，我一步步带你做
+
+如果你的电脑已经登录过 GitHub CLI 或配置过 Git，我可以直接帮你执行上传命令。
+
+### 网页手动上传方法
+
+如果电脑还没有安装 Git，可以先用 GitHub 网页上传：
+
+1. 打开仓库页面。
+2. 点击 `Add file` -> `Upload files`。
+3. 上传这些文件和文件夹：`index.html`、`styles.css`、`app.js`、`README.md`、`.gitignore`、`data/`、`scripts/`。
+4. 提交信息写 `init tutor map`，点击 `Commit changes`。
+
+后续如果安装了 Git，可以在本目录运行：
+
+```powershell
+git init
+git branch -M main
+git remote add origin https://github.com/jww666/-.git
+git add index.html styles.css app.js README.md .gitignore data scripts
+git commit -m "init tutor map"
+git push -u origin main
+```
