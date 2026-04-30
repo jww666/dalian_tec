@@ -44,6 +44,18 @@ localhost
 jww666.github.io
 ```
 
+如果希望群友打开网页就能直接看到地图，而不是自己输入 Key，可以编辑 `data/config.js`：
+
+```js
+window.PUBLIC_MAP_CONFIG = {
+  amapKey: "你的高德 Web JS API Key",
+  amapSecurityCode: "你的 securityJsCode",
+  hideKeyInputs: true
+};
+```
+
+注意：这个文件会公开给所有访问者，所以必须在高德控制台把 Key 限制为只允许你的 GitHub Pages 域名使用。
+
 ## 公开访问
 
 这个项目是纯静态网页，适合用 GitHub Pages 公开访问。在仓库页面进入 `Settings` -> `Pages`，把 `Build and deployment` 设置为：

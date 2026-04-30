@@ -20,6 +20,7 @@ const state = {
   activeId: null,
   map: null,
   markers: [],
+  markersById: new Map(),
   geocoder: null,
   amapReady: false
 };
@@ -66,6 +67,10 @@ function getGradeColor(item) {
     high: "#d64545",
     other: "#7a869a"
   }[getGradeType(item)];
+}
+
+function getPublicConfig() {
+  return window.PUBLIC_MAP_CONFIG || {};
 }
 
 function unique(values) {
@@ -195,9 +200,7 @@ function renderCards() {
 
   els.cards.querySelectorAll(".card").forEach((card) => {
     card.addEventListener("click", () => {
-      state.activeId = card.dataset.id;
-      renderCards();
-      focusActiveMarker();
+      setActiveTask(card.dataset.id, true);
     });
   });
 }
@@ -227,11 +230,9 @@ function renderOfflineMap() {
     marker.style.left = `${((point[0] - minLng) / (maxLng - minLng || 1)) * 86 + 7}%`;
     marker.style.top = `${(1 - (point[1] - minLat) / (maxLat - minLat || 1)) * 82 + 9}%`;
     marker.title = `${item.id} ${item.address}`;
-    marker.textContent = String(item.id).slice(-3);
+    marker.setAttribute("aria-label", `${item.id} ${item.address}`);
     marker.addEventListener("click", () => {
-      state.activeId = item.id;
-      renderCards();
-      renderMap();
+      setActiveTask(item.id, true);
     });
     box.appendChild(marker);
   });
@@ -244,14 +245,19 @@ function clearAmapMarkers() {
     state.map.remove(state.markers);
   }
   state.markers = [];
+  state.markersById = new Map();
 }
 
 function createAmapMarkerContent(item) {
   const marker = document.createElement("div");
   marker.className = `map-marker ${getGradeClass(item)}${item.id === state.activeId ? " active" : ""}`;
-  marker.textContent = String(item.id).slice(-3);
   marker.title = `${item.id} ${item.address || ""}`;
+  marker.setAttribute("aria-label", marker.title);
   return marker;
+}
+
+function getMarkerOffset(item) {
+  return item.id === state.activeId ? new AMap.Pixel(-14, -14) : new AMap.Pixel(-9, -9);
 }
 
 function renderAmap() {
@@ -273,14 +279,13 @@ function renderAmap() {
       position: point,
       title: `${item.id} ${item.address}`,
       content: createAmapMarkerContent(item),
-      offset: new AMap.Pixel(-17, -17)
+      offset: getMarkerOffset(item)
     });
     marker.on("click", () => {
-      state.activeId = item.id;
-      renderCards();
-      focusActiveMarker();
+      setActiveTask(item.id, true);
     });
     state.markers.push(marker);
+    state.markersById.set(item.id, marker);
 
     if (!item.lng && !item.lat && state.geocoder && item.address && item.address !== "大连市") {
       item._geocoding = true;
@@ -306,6 +311,33 @@ function renderAmap() {
   els.mapStatus.textContent = "已加载高德地图。当前坐标优先使用已解析坐标，缺坐标时按行政区近似展示。";
 }
 
+function updateAmapMarkerHighlight() {
+  if (!state.amapReady || !window.AMap) return;
+  state.filtered.forEach((item) => {
+    const marker = state.markersById.get(item.id);
+    if (!marker) return;
+    marker.setContent(createAmapMarkerContent(item));
+    marker.setOffset(getMarkerOffset(item));
+    marker.setzIndex(item.id === state.activeId ? 120 : 100);
+  });
+}
+
+function setActiveTask(id, shouldCenter) {
+  if (!id || state.activeId === id) {
+    if (shouldCenter) focusActiveMarker();
+    return;
+  }
+  state.activeId = id;
+  renderCards();
+  updateAmapMarkerHighlight();
+  if (!state.amapReady) {
+    renderMap();
+  }
+  if (shouldCenter) {
+    focusActiveMarker();
+  }
+}
+
 function renderMap() {
   if (!state.filtered.length) {
     els.map.innerHTML = `<div class="offline-map"></div>`;
@@ -325,7 +357,9 @@ function focusActiveMarker() {
   if (activeIndex < 0) return;
   const active = state.filtered[activeIndex];
   if (state.amapReady && state.map) {
-    state.map.setZoomAndCenter(14, getPoint(active, activeIndex));
+    const marker = state.markersById.get(active.id);
+    const position = marker ? marker.getPosition() : getPoint(active, activeIndex);
+    state.map.setZoomAndCenter(Math.max(state.map.getZoom(), 14), position);
   } else {
     renderMap();
   }
@@ -362,12 +396,16 @@ function loadAmap(key) {
 }
 
 function initKeyBox() {
+  const publicConfig = getPublicConfig();
   const urlKey = new URLSearchParams(location.search).get("amap_key");
   const urlSecurity = new URLSearchParams(location.search).get("amap_security");
   const savedKey = localStorage.getItem("amap_key") || "";
   const savedSecurity = localStorage.getItem("amap_security_code") || "";
-  els.amapKey.value = urlKey || savedKey;
-  els.amapSecurity.value = urlSecurity || savedSecurity;
+  els.amapKey.value = urlKey || savedKey || publicConfig.amapKey || "";
+  els.amapSecurity.value = urlSecurity || savedSecurity || publicConfig.amapSecurityCode || "";
+  if (publicConfig.hideKeyInputs && !new URLSearchParams(location.search).has("show_keys")) {
+    document.querySelector(".keybox")?.classList.add("hidden");
+  }
   els.saveKey.addEventListener("click", () => {
     localStorage.setItem("amap_key", els.amapKey.value.trim());
     localStorage.setItem("amap_security_code", els.amapSecurity.value.trim());
