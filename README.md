@@ -24,6 +24,28 @@ python scripts\parse_docx.py "D:\大连家教.docx"
 
 3. 打开 `index.html` 查看网页。
 
+## 一键更新网页数据
+
+以后你更新 Word 文档后，不是在 GitHub 网页里点 `.bat`，而是在你自己电脑的项目文件夹里双击：
+
+```text
+D:\github\-\update-and-push.bat
+```
+
+它会自动完成：
+
+```text
+读取 D:\大连家教.docx -> 生成 data/tutors.js/json -> 提交 Git -> 推送 GitHub -> GitHub Pages 自动更新
+```
+
+运行完成后，等待几十秒到两分钟，再打开：
+
+```text
+https://jww666.github.io/dalian_tec/
+```
+
+如果浏览器还是旧数据，按 `Ctrl + F5` 强制刷新。
+
 ## 高德地图 Key
 
 网页可以不用 Key 先看列表和近似位置；如果要使用真实地图和地址解析，需要高德 Web 端 JavaScript API Key 和安全密钥 `securityJsCode`。不要把 Key 或安全密钥写进公开仓库。
