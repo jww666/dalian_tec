@@ -44,6 +44,8 @@ localhost
 jww666.github.io
 ```
 
+注意：白名单只填域名，不填协议和路径。比如 GitHub Pages 页面是 `https://jww666.github.io/dalian_tec/`，高德白名单里应填 `jww666.github.io`，不要填 `https://jww666.github.io/dalian_tec/`。
+
 如果希望群友打开网页就能直接看到地图，而不是自己输入 Key，可以编辑 `data/config.js`：
 
 ```js
@@ -65,6 +67,12 @@ window.PUBLIC_MAP_CONFIG = {
 - Folder: `/ (root)`
 
 保存后等待 GitHub 生成访问地址。公开部署时请使用高德控制台里的域名白名单限制 Key，只允许 `jww666.github.io`、`localhost`、`127.0.0.1` 等可信域名调用。
+
+当前仓库名是 `dalian_tec`，GitHub Pages 地址通常会是：
+
+```text
+https://jww666.github.io/dalian_tec/
+```
 
 ## 安全说明
 
@@ -96,7 +104,7 @@ window.PUBLIC_MAP_CONFIG = {
 ```powershell
 git init
 git branch -M main
-git remote add origin https://github.com/jww666/-.git
+git remote add origin https://github.com/jww666/dalian_tec.git
 git add index.html styles.css app.js README.md .gitignore data scripts
 git commit -m "init tutor map"
 git push -u origin main
