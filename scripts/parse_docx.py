@@ -34,6 +34,8 @@ SUBJECTS = [
 
 SUBJECT_ALIASES = {
     "语数外": ["语文", "数学", "英语"],
+    "语数英": ["语文", "数学", "英语"],
+    "英数物理": ["英语", "数学", "物理"],
     "数理化": ["数学", "物理", "化学"],
     "理科": ["数学", "物理", "化学"],
 }
@@ -101,12 +103,25 @@ def split_blocks(text: str) -> list[str]:
     blocks = []
     current = []
     serial_start = re.compile(
-        r"^(?:(?:序号|编号|单号|需求)\s*[:：]?\s*)?[A-Za-z]?\d{3,5}(?:-\d{1,3})?(?:[（(][^）)]{0,20}[）)])?\s*(?:[:：、.)-])?"
+        r"^(?:(?:序号|编号|单号|需求)\s*[:：]?\s*)?[A-Za-z]?\d{3,8}(?:-\d{1,3})?(?:[（(][^）)]{0,20}[）)])?\s*(?:[:：、.)-])?"
     )
-    label_start = re.compile(r"^(?:地址|地点|位置|薪资|工资|年级|科目|要求|备注)[:：]")
+    bracket_start = re.compile(r"^【[^】]*\d{3,8}(?:-\d{1,3})?[^】]*】")
+    embedded_code_start = re.compile(r"^[^\n]{0,12}[A-Za-z]\d{5,8}【")
+    family_id_start = re.compile(r"^家教编号[:：]\s*\d{5,10}")
+    anonymous_address_start = re.compile(r"^(?:学员地址|详细地址|地址|地点|位置)\s*[，,:：]\s*.{2,}")
 
     for line in lines:
-        starts_new = (bool(serial_start.search(line)) or line.startswith("帮出")) and current
+        starts_numbered = (
+            bool(serial_start.search(line))
+            or bool(bracket_start.search(line))
+            or bool(embedded_code_start.search(line))
+            or bool(family_id_start.search(line))
+        )
+        current_text = "\n".join(current)
+        starts_anonymous = bool(anonymous_address_start.search(line)) and bool(
+            re.search(r"(薪资|薪水|工资|报酬|课酬|价格|\d+\s*(?:元|/h|/H|/小时|/次|/2h|/2H))", current_text)
+        )
+        starts_new = (starts_numbered or line.startswith("帮出") or starts_anonymous) and current
         if starts_new:
             blocks.append("\n".join(current))
             current = [line]
@@ -118,7 +133,7 @@ def split_blocks(text: str) -> list[str]:
 
     cleaned = []
     for block in blocks:
-        if re.search(r"(辅导年级|学员年级|年级|补习科目|学科|详细地址|位置|薪资)", block):
+        if re.search(r"(辅导年级|学员年级|年级|补习科目|辅导科目|学科|详细地址|学员地址|地址|位置|薪资|薪水|费用|/h|/H|/小时|元/小时|/次|\d+元|初[一二三123]|高[一二三123]|小[一二三四五六123456]|小学|初中|高中)", block):
             cleaned.append(block)
     return cleaned
 
@@ -134,8 +149,11 @@ def first_match(patterns: list[str], text: str) -> str:
 def extract_serial(block: str, fallback: int) -> str:
     value = first_match(
         [
-            r"(?:序号|编号|单号|需求)\s*[:：]?\s*([A-Za-z]?\d{3,5}(?:-\d{1,3})?)",
-            r"^\s*([A-Za-z]?\d{3,5}(?:-\d{1,3})?)",
+            r"家教编号\s*[:：]\s*(\d{5,10})",
+            r"【\s*([A-Za-z]?\d{3,8}(?:-\d{1,3})?)",
+            r"([A-Za-z]\d{5,8})【",
+            r"(?:序号|编号|单号|需求)\s*[:：]?\s*([A-Za-z]?\d{3,8}(?:-\d{1,3})?)",
+            r"^\s*([A-Za-z]?\d{3,8}(?:-\d{1,3})?)",
         ],
         block,
     )
@@ -146,6 +164,7 @@ def extract_salary(block: str) -> tuple[str, int | None, int | None]:
     salary = first_match(
         [
             r"(?:薪资|工资|报酬|课酬|价格)\s*[:：]?\s*([^\n，,。；;]+)",
+            r"(?:老师薪水|薪水)\s*[:：]?\s*([^\n，,。；;]+)",
             r"((?:\d{2,4}\s*[-~—到至]\s*)?\d{2,4}\s*(?:元|块)\s*(?:/|每)?\s*(?:小时|h|H|课时|次|天|月)?)",
             r"((?:\d{2,4}\s*[-~—到至]\s*)?\d{2,4}\s*(?:/|每)\s*(?:小时|h|H|课时|次|天|月))",
         ],
@@ -164,7 +183,9 @@ def extract_salary(block: str) -> tuple[str, int | None, int | None]:
 def extract_grade(block: str) -> str:
     course_line = first_match(
         [
-            r"(?:辅导年级及科目|辅导年级|学员年级|年级)\s*[:：]?\s*([^\n，,。；;()（）]{1,24})",
+            r"(?:辅导年级及科目|辅导年级|学员年级|年级)\s*[:：]\s*([^\n，,。；;()（）]{1,24})",
+            r"学员情况\s*[:：]\s*([^\n，,。；;()（）]{1,24})",
+            r"【(?:[^】]*?)(小学|初中|高中|初[一二三123]|高[一二三123]|小[一二三四五六123456]|[一二三四五六\d]+年级)",
             r"((?:小学|初中|高中|幼儿园|大学)?[一二三四五六七八九十\d]+年级)",
             r"((?:小|初|高)[一二三四五六七八九\d])",
         ],
@@ -172,8 +193,8 @@ def extract_grade(block: str) -> str:
     )
     grade = first_match(
         [
-            r"((?:小学|初中|高中|幼儿园|大学)?[一二三四五六七八九十\d]+年级)",
             r"((?:小|初|高)[一二三四五六七八九\d])",
+            r"((?:小学|初中|高中|幼儿园|大学)?[一二三四五六七八九十\d]+年级)",
             r"((?:小学|初中|高中|幼儿园|大学))",
         ],
         course_line or block,
@@ -189,7 +210,7 @@ def extract_subjects(block: str) -> list[str]:
     for subject in SUBJECTS:
         if subject in block:
             found.append(subject)
-    subject_line = first_match([r"(?:补习科目|学科)\s*[:：]?\s*([^\n，,。；;]{1,18})"], block)
+    subject_line = first_match([r"(?:补习科目|辅导科目|学科)\s*[:：]?\s*([^\n，,。；;]{1,24})"], block)
     for subject in SUBJECTS:
         if subject_line and subject in subject_line:
             found.append(subject)
@@ -217,16 +238,76 @@ def extract_district(block: str) -> str:
 
 
 def extract_address(block: str, district: str) -> str:
+    bracket_address = extract_bracket_address(block)
+    if bracket_address:
+        return bracket_address
+
     address = first_match(
         [
-            r"(?:详细地址|地址|地点|位置|区域|住址|上课地点)\s*[，,:：]?\s*([^\n。；;]{2,60})",
+            r"(?:学员地址|详细地址|地址|地点|位置|区域|住址|上课地点)\s*[，,:：]?\s*([^\n。；;]{2,60})",
             r"((?:中山区|西岗区|沙河口区|甘井子区|旅顺口区|金州区|普兰店区|高新区|开发区)[^\n。；;]{0,45})",
         ],
         block,
     )
     if address:
         return address
+    guessed = guess_inline_address(block)
+    if guessed:
+        return guessed
     return district if district != "未注明" else "大连市"
+
+
+def extract_bracket_address(block: str) -> str:
+    for content in re.findall(r"【([^】]+)】", block):
+        if not looks_like_address(content):
+            continue
+        cleaned = re.sub(r"^[A-Za-z]?\d{3,8}(?:-\d{1,3})?[，,、.\s]*", "", content).strip()
+        cleaned = re.sub(r"[（(][^）)]*学生上门[^）)]*[）)]", "", cleaned).strip()
+        changed = True
+        while changed:
+            before = cleaned
+            cleaned = re.sub(r"^(小学|初中|高中|初[一二三123]|高[一二三123]|小[一二三四五六123456]|[一二三四五六\d]+年级)\s*", "", cleaned)
+            for subject in SUBJECTS:
+                cleaned = re.sub(rf"^{re.escape(subject)}\s*", "", cleaned)
+            changed = cleaned != before
+        cleaned = cleaned.strip(" ：:，,、。；;")
+        if cleaned and looks_like_address(cleaned):
+            return cleaned
+    return ""
+
+
+def guess_inline_address(block: str) -> str:
+    normalized = re.sub(r"【[^】]+】", "，", block)
+    parts = [part.strip(" ：:，,、。；;\n\t") for part in re.split(r"[，,。；;\n]", normalized)]
+    best = ""
+    best_score = 0
+    for part in parts:
+        if len(part) < 2 or len(part) > 32:
+            continue
+        if re.search(r"(老师|女老师|男老师|男女|一周|一次|两次|小时|全天|成绩|费用|课费|要求|上课|时间|可以|协商|补|不及格|目前|孩子|家长)", part):
+            continue
+        if re.search(r"\d+\s*(?:元|/h|/H|/次|/2h|/2H|小时)", part):
+            continue
+        score = 0
+        if looks_like_address(part):
+            score += 4
+        if any(key in part for key in DISTRICT_ALIASES):
+            score += 2
+        if re.search(r"(路|街|巷|湾|台|城|园|小区|附近|地铁|门|店|E家|天地|品格|华城|广场|公寓|大厦|新天地|锦绣|幸福)", part):
+            score += 2
+        if score > best_score:
+            best = part
+            best_score = score
+    return best if best_score >= 4 else ""
+
+
+def looks_like_address(text: str) -> bool:
+    return bool(
+        re.search(
+            r"(中山区|西岗区|沙河口区|甘井子区|旅顺|金州|普兰店|高新区|开发区|路|街|巷|湾|台|城|园|小区|附近|地铁|门|店|E家|天地|品格|华城|广场|公寓|大厦|新天地|东港|金石滩|幸福)",
+            text,
+        )
+    )
 
 
 def compact_note(block: str, fields: list[str]) -> str:
@@ -240,8 +321,15 @@ def compact_note(block: str, fields: list[str]) -> str:
 
 def parse(text: str) -> list[dict]:
     tasks = []
+    seen_ids: dict[str, int] = {}
     for index, block in enumerate(split_blocks(text), start=1):
         serial = extract_serial(block, index)
+        display_id = serial
+        if serial in seen_ids:
+            seen_ids[serial] += 1
+            serial = f"{serial}-{seen_ids[display_id]}"
+        else:
+            seen_ids[serial] = 1
         salary, salary_min, salary_max = extract_salary(block)
         grade = extract_grade(block) or "未注明"
         subjects = extract_subjects(block)
@@ -251,6 +339,7 @@ def parse(text: str) -> list[dict]:
         tasks.append(
             {
                 "id": serial,
+                "displayId": display_id,
                 "address": address,
                 "district": district,
                 "salary": salary or "未注明",
