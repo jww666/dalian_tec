@@ -1,6 +1,6 @@
 # 大连家教地图
 
-一个面向大连地区家教信息整理的静态网页。它从 Word 文档中提取家教需求的序号、地址、薪资、年级、科目、行政区和备注，并在网页中提供地图展示与筛选。
+一个面向大连地区家教信息整理的静态网页。它从项目文件夹里的 Word 文档中提取家教需求的序号、地址、薪资、年级、科目、行政区和备注，并在网页中提供地图展示与筛选。
 
 ## 当前结构
 
@@ -9,15 +9,15 @@
 - `app.js`：筛选、列表、地图和高德地图加载逻辑。
 - `data/tutors.js`：网页直接读取的数据。
 - `data/tutors.json`：同一份数据，方便查看或二次处理。
-- `scripts/parse_docx.py`：从 `D:\大连家教.docx` 解析数据。
+- `scripts/parse_docx.py`：从项目文件夹里的 `大连家教.docx` 解析数据。
 
 ## 使用方法
 
-1. 先确认 `D:\大连家教.docx` 已保存成功，并且文件不是 0 字节。
+1. 先确认项目文件夹里的 `大连家教.docx` 已保存成功，并且文件不是 0 字节。
 2. 在本目录运行：
 
 ```powershell
-python scripts\parse_docx.py "D:\大连家教.docx"
+python scripts\parse_docx.py "大连家教.docx"
 ```
 
 如果系统没有可用的 `python`，可以用 Codex 自带的 Python 路径运行，或让我帮你跑。
@@ -29,13 +29,13 @@ python scripts\parse_docx.py "D:\大连家教.docx"
 以后你更新 Word 文档后，不是在 GitHub 网页里点 `.bat`，而是在你自己电脑的项目文件夹里双击：
 
 ```text
-D:\github\-\update-and-push.bat
+D:\github\dalian_tec\update-and-push.bat
 ```
 
 它会自动完成：
 
 ```text
-读取 D:\大连家教.docx -> 生成 data/tutors.js/json -> 提交 Git -> 推送 GitHub -> GitHub Pages 自动更新
+读取同文件夹里的 大连家教.docx -> 生成 data/tutors.js/json -> 提交 Git -> 推送 GitHub -> GitHub Pages 自动更新
 ```
 
 运行完成后，等待几十秒到两分钟，再打开：

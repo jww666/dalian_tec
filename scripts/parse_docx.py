@@ -275,7 +275,7 @@ def write_data(tasks: list[dict]) -> None:
 
 
 def main() -> int:
-    source = Path(sys.argv[1]) if len(sys.argv) > 1 else Path(r"D:\大连家教.docx")
+    source = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "大连家教.docx"
     text = read_docx_text(source)
     tasks = parse(text)
     write_data(tasks)

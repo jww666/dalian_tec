@@ -4,7 +4,7 @@ chcp 65001 >nul
 
 cd /d "%~dp0"
 
-set "DOCX_PATH=D:\大连家教.docx"
+set "DOCX_PATH=%~dp0大连家教.docx"
 set "PYTHON_CMD="
 set "GIT_EXE="
 
