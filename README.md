@@ -44,6 +44,23 @@ localhost
 jww666.github.io
 ```
 
+## 公开访问
+
+这个项目是纯静态网页，适合用 GitHub Pages 公开访问。在仓库页面进入 `Settings` -> `Pages`，把 `Build and deployment` 设置为：
+
+- Source: `Deploy from a branch`
+- Branch: `main`
+- Folder: `/ (root)`
+
+保存后等待 GitHub 生成访问地址。公开部署时请使用高德控制台里的域名白名单限制 Key，只允许 `jww666.github.io`、`localhost`、`127.0.0.1` 等可信域名调用。
+
+## 安全说明
+
+- 页面不包含注册、登录、支付、聊天和预约系统，不收集访问者账号信息。
+- 页面会对群消息文本做 HTML 转义，避免备注内容被当作代码执行。
+- 高德 Key 和安全密钥只保存在访问者浏览器的 `localStorage`，不会提交到 GitHub。
+- 如果要给所有人默认加载地图，建议新建一个只允许 GitHub Pages 域名使用的高德 Web JS API Key。
+
 ## GitHub 上传
 
 你需要给我其中一种信息：

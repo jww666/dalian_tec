@@ -25,6 +25,8 @@ const state = {
 };
 
 const els = {
+  welcomeNotice: document.querySelector("#welcomeNotice"),
+  noticeClose: document.querySelector("#noticeClose"),
   summary: document.querySelector("#summary"),
   amapKey: document.querySelector("#amapKey"),
   amapSecurity: document.querySelector("#amapSecurity"),
@@ -42,6 +44,29 @@ const els = {
   map: document.querySelector("#map"),
   mapStatus: document.querySelector("#mapStatus")
 };
+
+function getGradeType(item) {
+  const grade = String(item.grade || "");
+  const raw = String(item.raw || "");
+  const text = `${grade} ${raw}`;
+  if (/高[一二三123]|高中|高考/.test(text)) return "high";
+  if (/初[一二三123]|初中|中考/.test(text)) return "middle";
+  if (/小[一二三四五六123456]|小学|一年级|二年级|三年级|四年级|五年级|六年级/.test(text)) return "primary";
+  return "other";
+}
+
+function getGradeClass(item) {
+  return `grade-${getGradeType(item)}`;
+}
+
+function getGradeColor(item) {
+  return {
+    primary: "#2f9e44",
+    middle: "#1f6feb",
+    high: "#d64545",
+    other: "#7a869a"
+  }[getGradeType(item)];
+}
 
 function unique(values) {
   return [...new Set(values.filter(Boolean))].sort((a, b) => a.localeCompare(b, "zh-CN"));
@@ -153,10 +178,11 @@ function renderCards() {
         item.grade,
         ...(item.subjects || [])
       ].filter(Boolean);
+      const gradeColor = getGradeColor(item);
       return `
         <article class="card${active}" data-id="${escapeText(item.id)}">
           <div class="card-top">
-            <span class="serial">${escapeText(item.id)}</span>
+            <span class="serial" style="--grade-color: ${gradeColor}">${escapeText(item.id)}</span>
             <span class="salary">${escapeText(item.salary || "薪资未注明")}</span>
           </div>
           <p class="address">${escapeText(item.address || "地址未注明")}</p>
@@ -197,7 +223,7 @@ function renderOfflineMap() {
   state.filtered.forEach((item, index) => {
     const point = getPoint(item, index);
     const marker = document.createElement("button");
-    marker.className = `offline-marker${item.id === state.activeId ? " active" : ""}`;
+    marker.className = `offline-marker ${getGradeClass(item)}${item.id === state.activeId ? " active" : ""}`;
     marker.style.left = `${((point[0] - minLng) / (maxLng - minLng || 1)) * 86 + 7}%`;
     marker.style.top = `${(1 - (point[1] - minLat) / (maxLat - minLat || 1)) * 82 + 9}%`;
     marker.title = `${item.id} ${item.address}`;
@@ -220,6 +246,14 @@ function clearAmapMarkers() {
   state.markers = [];
 }
 
+function createAmapMarkerContent(item) {
+  const marker = document.createElement("div");
+  marker.className = `map-marker ${getGradeClass(item)}${item.id === state.activeId ? " active" : ""}`;
+  marker.textContent = String(item.id).slice(-3);
+  marker.title = `${item.id} ${item.address || ""}`;
+  return marker;
+}
+
 function renderAmap() {
   if (!state.map) {
     state.map = new AMap.Map("map", {
@@ -238,10 +272,8 @@ function renderAmap() {
     const marker = new AMap.Marker({
       position: point,
       title: `${item.id} ${item.address}`,
-      label: {
-        content: String(item.id),
-        direction: "top"
-      }
+      content: createAmapMarkerContent(item),
+      offset: new AMap.Pixel(-17, -17)
     });
     marker.on("click", () => {
       state.activeId = item.id;
@@ -347,7 +379,25 @@ function initKeyBox() {
   loadAmap(els.amapKey.value.trim());
 }
 
+function initNotice() {
+  if (!els.welcomeNotice || !els.noticeClose) return;
+  els.noticeClose.addEventListener("click", () => {
+    els.welcomeNotice.classList.add("hidden");
+  });
+  els.welcomeNotice.addEventListener("click", (event) => {
+    if (event.target === els.welcomeNotice) {
+      els.welcomeNotice.classList.add("hidden");
+    }
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      els.welcomeNotice.classList.add("hidden");
+    }
+  });
+}
+
 function init() {
+  initNotice();
   initFilters();
   initKeyBox();
   applyFilters();

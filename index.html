@@ -3,14 +3,29 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
     <title>大连家教地图</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <div id="welcomeNotice" class="notice" role="dialog" aria-modal="true" aria-labelledby="noticeTitle">
+      <div class="notice-panel">
+        <h2 id="noticeTitle">大连家教地图</h2>
+        <p>有问题请在群中反馈或联系 <a href="mailto:wangjiawei_edu@163.com">wangjiawei_edu@163.com</a></p>
+        <button id="noticeClose" type="button">知道了</button>
+      </div>
+    </div>
+
     <header class="topbar">
       <div>
         <h1>大连家教地图</h1>
         <p id="summary">正在读取家教需求...</p>
+      </div>
+      <div class="legend" aria-label="地图图例">
+        <span><i class="legend-dot grade-primary"></i>小学</span>
+        <span><i class="legend-dot grade-middle"></i>初中</span>
+        <span><i class="legend-dot grade-high"></i>高中</span>
+        <span><i class="legend-dot grade-other"></i>其他</span>
       </div>
       <div class="keybox">
         <input id="amapKey" type="password" placeholder="高德 Web JS API Key" autocomplete="off" />
