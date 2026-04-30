@@ -152,7 +152,7 @@ function applyFilters() {
   });
 
   if (!state.filtered.some((item) => item.id === state.activeId)) {
-    state.activeId = state.filtered[0]?.id || null;
+    state.activeId = null;
   }
   renderCards();
   renderMap();
@@ -200,7 +200,7 @@ function renderCards() {
 
   els.cards.querySelectorAll(".card").forEach((card) => {
     card.addEventListener("click", () => {
-      setActiveTask(card.dataset.id, true);
+      setActiveTask(card.dataset.id, { centerMap: true, scrollList: false });
     });
   });
 }
@@ -230,9 +230,10 @@ function renderOfflineMap() {
     marker.style.left = `${((point[0] - minLng) / (maxLng - minLng || 1)) * 86 + 7}%`;
     marker.style.top = `${(1 - (point[1] - minLat) / (maxLat - minLat || 1)) * 82 + 9}%`;
     marker.title = `${item.id} ${item.address}`;
+    marker.textContent = String(item.id);
     marker.setAttribute("aria-label", `${item.id} ${item.address}`);
     marker.addEventListener("click", () => {
-      setActiveTask(item.id, true);
+      setActiveTask(item.id, { centerMap: true, scrollList: true });
     });
     box.appendChild(marker);
   });
@@ -253,11 +254,14 @@ function createAmapMarkerContent(item) {
   marker.className = `map-marker ${getGradeClass(item)}${item.id === state.activeId ? " active" : ""}`;
   marker.title = `${item.id} ${item.address || ""}`;
   marker.setAttribute("aria-label", marker.title);
+  const label = document.createElement("span");
+  label.textContent = String(item.id);
+  marker.appendChild(label);
   return marker;
 }
 
 function getMarkerOffset(item) {
-  return item.id === state.activeId ? new AMap.Pixel(-14, -14) : new AMap.Pixel(-9, -9);
+  return item.id === state.activeId ? new AMap.Pixel(-28, -28) : new AMap.Pixel(-23, -23);
 }
 
 function renderAmap() {
@@ -282,7 +286,7 @@ function renderAmap() {
       offset: getMarkerOffset(item)
     });
     marker.on("click", () => {
-      setActiveTask(item.id, true);
+      setActiveTask(item.id, { centerMap: true, scrollList: true });
     });
     state.markers.push(marker);
     state.markersById.set(item.id, marker);
@@ -295,7 +299,7 @@ function renderAmap() {
           item.lng = location.lng;
           item.lat = location.lat;
           marker.setPosition([item.lng, item.lat]);
-          if (state.filtered.length > 1) {
+          if (!state.activeId && state.filtered.length > 1) {
             state.map.setFitView(state.markers, false, [50, 50, 50, 50]);
           }
         }
@@ -322,9 +326,21 @@ function updateAmapMarkerHighlight() {
   });
 }
 
-function setActiveTask(id, shouldCenter) {
+function scrollActiveCardIntoView() {
+  if (!state.activeId) return;
+  const activeCard = els.cards.querySelector(`.card[data-id="${CSS.escape(state.activeId)}"]`);
+  if (!activeCard) return;
+  activeCard.scrollIntoView({
+    behavior: "smooth",
+    block: "center"
+  });
+}
+
+function setActiveTask(id, options = {}) {
+  const { centerMap = false, scrollList = false } = options;
   if (!id || state.activeId === id) {
-    if (shouldCenter) focusActiveMarker();
+    if (centerMap) focusActiveMarker();
+    if (scrollList) scrollActiveCardIntoView();
     return;
   }
   state.activeId = id;
@@ -333,7 +349,10 @@ function setActiveTask(id, shouldCenter) {
   if (!state.amapReady) {
     renderMap();
   }
-  if (shouldCenter) {
+  if (scrollList) {
+    scrollActiveCardIntoView();
+  }
+  if (centerMap) {
     focusActiveMarker();
   }
 }
