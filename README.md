@@ -26,9 +26,23 @@ python scripts\parse_docx.py "D:\大连家教.docx"
 
 ## 高德地图 Key
 
-网页可以不用 Key 先看列表和近似位置；如果要使用真实地图和地址解析，需要高德 Web 端 JavaScript API Key。不要把 Key 写进公开仓库。
+网页可以不用 Key 先看列表和近似位置；如果要使用真实地图和地址解析，需要高德 Web 端 JavaScript API Key 和安全密钥 `securityJsCode`。不要把 Key 或安全密钥写进公开仓库。
 
-打开网页后，把 Key 粘到右上角的输入框并点击“保存”，页面会自动加载高德地图。
+打开网页后，把 Key 和安全密钥粘到右上角的输入框并点击“保存”，页面会自动加载高德地图。
+
+如果直接双击 `index.html`，浏览器地址会是 `file://...`，高德的域名白名单/Referer 鉴权可能不认。推荐双击 `run-local.bat`，然后用浏览器访问：
+
+```text
+http://127.0.0.1:5173/
+```
+
+高德控制台里 Web 端 JS API Key 的域名白名单建议加入：
+
+```text
+localhost
+127.0.0.1
+jww666.github.io
+```
 
 ## GitHub 上传
 

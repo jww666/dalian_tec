@@ -27,6 +27,7 @@ const state = {
 const els = {
   summary: document.querySelector("#summary"),
   amapKey: document.querySelector("#amapKey"),
+  amapSecurity: document.querySelector("#amapSecurity"),
   saveKey: document.querySelector("#saveKey"),
   subjectFilter: document.querySelector("#subjectFilter"),
   gradeFilter: document.querySelector("#gradeFilter"),
@@ -303,6 +304,12 @@ function loadAmap(key) {
     renderMap();
     return;
   }
+  const securityJsCode = els.amapSecurity.value.trim();
+  if (securityJsCode) {
+    window._AMapSecurityConfig = {
+      securityJsCode
+    };
+  }
   if (window.AMap) {
     state.amapReady = true;
     renderMap();
@@ -316,7 +323,7 @@ function loadAmap(key) {
   script.src = `https://webapi.amap.com/maps?v=2.0&key=${encodeURIComponent(key)}&callback=onAmapReady&plugin=AMap.Geocoder`;
   script.onerror = () => {
     state.amapReady = false;
-    els.mapStatus.textContent = "高德地图加载失败，请检查 Key、网络或高德 JS API 服务是否开通。";
+    els.mapStatus.textContent = "高德地图加载失败，请检查 Key、安全密钥、域名白名单、网络或高德 JS API 服务是否开通。";
     renderOfflineMap();
   };
   document.head.appendChild(script);
@@ -324,12 +331,19 @@ function loadAmap(key) {
 
 function initKeyBox() {
   const urlKey = new URLSearchParams(location.search).get("amap_key");
+  const urlSecurity = new URLSearchParams(location.search).get("amap_security");
   const savedKey = localStorage.getItem("amap_key") || "";
+  const savedSecurity = localStorage.getItem("amap_security_code") || "";
   els.amapKey.value = urlKey || savedKey;
+  els.amapSecurity.value = urlSecurity || savedSecurity;
   els.saveKey.addEventListener("click", () => {
     localStorage.setItem("amap_key", els.amapKey.value.trim());
+    localStorage.setItem("amap_security_code", els.amapSecurity.value.trim());
     location.reload();
   });
+  if (location.protocol === "file:") {
+    els.mapStatus.textContent = "当前用 file:// 打开，高德鉴权可能无法识别域名。建议用 README 里的本地服务器方式或 GitHub Pages 打开。";
+  }
   loadAmap(els.amapKey.value.trim());
 }
 

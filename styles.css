@@ -68,7 +68,7 @@ h1 {
 .keybox {
   display: flex;
   gap: 8px;
-  min-width: min(420px, 100%);
+  min-width: min(720px, 100%);
 }
 
 .keybox input {
@@ -318,6 +318,7 @@ select:focus {
 
   .keybox {
     min-width: 0;
+    flex-wrap: wrap;
   }
 
   .layout {
